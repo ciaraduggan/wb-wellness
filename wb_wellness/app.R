@@ -11,12 +11,13 @@ library(dplyr)
 library(readr)
 library(ggplot2)
 library(patchwork)
-library(gt)
+library(tidymodels)
 
 # Loading data
 
-satisfaction_model <- readRDS("./sat_fit.rds")
-simple_satisfaction_model <- readRDS("./data/simple_satisfaction_model.rds")
+satisfaction_vi <- readRDS("./sat_vi.rds")
+simple_satisfaction_model <- readRDS("./simple_satisfaction_model.rds")
+
 
 # Define UI
 ui <- navbarPage(
@@ -69,9 +70,15 @@ ui <- navbarPage(
                 countries."
                 ),
                 p("The original de-identified dataset contained 7390 
-                responses and over 250 variables. After incomplete responses 
-                were removed, the data contained a total of 5940 observations."
+                responses and over 250 variables. 
+                Survey responses were collected from WBG employees based in 
+                locations around the globe. After incomplete responses 
+                were removed, the data contained a total of 5940 observations. 
+                This analysis considers the relative importance of 33 variables
+                related to work and the workplace in predicting overall 
+                job satisfaction of WBG employees."
                   ),
+                
                 h3("Github Repo"),
                 p(
                  "This project's GitHub repository lives",
@@ -265,12 +272,13 @@ ui <- navbarPage(
       tabPanel("Predictive Modeling Tool",
              fluidPage(
                        titlePanel("Predictive Modeling Tool"),
-                       sidebarLayout(
-                           sidebarPanel(
-                               p("Predict an employee's overall job satisfaction 
-                                 by completing the fields below. LASSO 
-                                 Regression Analysis indicated that the 
-                                 variables below are the ten workplace 
+                       
+                       h3("Predict an employee's overall job satisfaction 
+                                 by completing the fields below."),
+                       
+                       p("LASSO 
+                                 regression analysis indicated that the 
+                                 variables below are the twelve workplace 
                                  environment factors which are most predictive 
                                  of overall job satisfaction (based on the data 
                                  collected by SHINE).
@@ -280,39 +288,154 @@ ui <- navbarPage(
                                  the user provides. For more information on how 
                                  this tool works, check out the source code
                                  in this project's Github repo."
-                                 ),
-                               helpText("Complete the fields below."),
-                               
-                               numericInput("fair_treatment",
-                                           label = "fair_treatment",
-                                           value = 1,
-                                           min = 1,
-                                           max = 4),
-                               numericInput("trust_management",
-                                           label = "trust_management",
-                                           value = 1,
-                                           min = 1,
-                                           max = 4),
-                               numericInput("respect",
-                                           label = "respect",
-                                           value = 1,
-                                           min = 1,
-                                           max = 4),
-                               numericInput("caring_management",
-                                           label = "caring_management",
-                                           value = 1,
-                                           min = 1,
-                                           max = 4)
-                               ),
-                           
-                           mainPanel(
-                                tabsetPanel(type = "tabs",
-                                    tabPanel("Job Satisfaction",
-                                    h2("Employee's predicted overall 
-                                       job satisfaction:"),
-                                    plotOutput("satisfaction_plot")))
+                       ),
+                       
+                       fluidRow(
+                         column(9, plotOutput("satisfaction_plot"))
+                       ),
+                       
+                       p("For the variables below, a score of 1 indicates that the employee \"Strongly Disagrees\" with the given statement,
+                         a score of 2 indicates that they \"Disagree\",
+                         a score of 3 indicates that they \"Agree\", and
+                         a score of 4 indicates that they \"Strongly Agree\".
+                         The statements which correspond with each variable 
+                         are shown below."
+                         ),
+                       
+                       fluidRow(
+                         column(2, 
+                                numericInput("meaningful_work",
+                                             label = "meaningful_work",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                                numericInput("work_autonomy",
+                                             label = "work_autonomy",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                         ),
+                         
+                         column(2, 
+                                numericInput("recognition",
+                                             label = "recognition",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                                numericInput("respect",
+                                             label = "respect",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                                ),
+                                
+                                column(2, 
+                                       numericInput("fair_pay",
+                                                    label = "fair_pay",
+                                                    value = 1,
+                                                    min = 1,
+                                                    max = 4),
+                                       numericInput("helpful_supervisor",
+                                                    label = "helpful_supervisor",
+                                                    value = 1,
+                                                    min = 1,
+                                                    max = 4),
+                                ),
+                         
+                         column(2, 
+                                numericInput("team",
+                                             label = "team",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                                numericInput("energizing_culture",
+                                             label = "energizing_culture",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                         ),
+                        
+                         column(2, 
+                                numericInput("job_insecurity",
+                                             label = "job_insecurity",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                                numericInput("stressful",
+                                             label = "stressful",
+                                             value = 1,
+                                             min = 1,
+                                             max = 4),
+                         ),
+
+                                column(2, 
+                                       numericInput("helpful_management",
+                                                    label = "helpful_management",
+                                                    value = 1,
+                                                    min = 1,
+                                                    max = 4),
+                                       numericInput("workplace_design",
+                                                    label = "workplace_design",
+                                                    value = 1,
+                                                    min = 1,
+                                                    max = 4)
                                 )
-                           )
+                       ),
+                       
+                       h3("What do these variables mean?"),
+                       
+                       tags$ul(
+                         
+                         tags$li(
+                           tags$b("meaningful_work:"), "\"I find my work meaningful.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("recognition:"), "\"I feel recognized for my work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("fair_pay:"), "\"My employer pays me fairly for my work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("team:"), "\"I feel part of a team at work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("job_insecurity:"), "\"I worry about losing my job.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("helpful_management:"), "\"Management helps me deal with challenges at work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("work_autonomy:"), "\"Staff feel respected at work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("respect:"), "\"I have a lot of freedom to decide how to do my work.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("helpful_supervisor:"), "\"My supervisor is helpful.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("energizing_culture:"), "\"There is a vibrant atmosphere which is energizing.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("stressful:"), "\"My job is stressful.\""
+                         ),
+                         
+                         tags$li(
+                           tags$b("workplace_design:"), "\"The physical design of my workplace helps me to be productive (consider before COVID pandemic).\""
+                         )
+                       )
+                       
+
                        )
                        
              )
@@ -327,9 +450,7 @@ server <- function(input, output) {
   
   output$importance_plot <- renderPlot({
     
-    satisfaction_model %>%
-      pull_workflow_fit() %>%
-      vi(lambda = lowest_rmse$penalty) %>%
+    satisfaction_vi %>%
       mutate(Importance = abs(Importance),
              Variable = fct_reorder(Variable, Importance)) %>%
       ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
@@ -344,12 +465,34 @@ server <- function(input, output) {
     
     
     predictor_sat <- reactive({
-        predict(simple_satisfaction_model,
-                tibble(fair_treatment = input$fair_treatment,
-                       trust_management = input$trust_management,
-                       respect = input$respect,
-                       caring_management = input$caring_management),
-                interval = "confidence")
+ 
+      predict(simple_satisfaction_model, 
+              tibble(
+                meaningful_work =
+                  input$meaningful_work, 
+                recognition = 
+                  input$recognition,
+                fair_pay = 
+                  input$fair_pay,
+                team = 
+                  input$team,
+                job_insecurity = 
+                  input$job_insecurity,
+                helpful_management = 
+                  input$helpful_management,
+                work_autonomy = 
+                  input$work_autonomy,
+                respect = 
+                  input$respect,
+                helpful_supervisor = 
+                  input$helpful_supervisor,
+                energizing_culture = 
+                  input$energizing_culture,
+                stressful = 
+                  input$stressful,
+                workplace_design = 
+                 input$workplace_design),
+              interval = "confidence")
         
     })
     

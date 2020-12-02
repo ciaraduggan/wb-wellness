@@ -1,12 +1,9 @@
 ---
-title: "lasso"
+title: "wb_data_cleaning"
 author: "Ciara Duggan"
-date: "12/1/2020"
+date: "11/12/2020"
 output: pdf_document
 ---
-
-This markdown file contains all of the data cleaning and analysis behind my
-LASSO model.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -19,9 +16,7 @@ library(rstanarm)
 library(janitor)
 library(tidymodels)
 library(stats)
-library(glmnet)
-library(doParallel)
-library(vip)
+
 ```
 
 
@@ -369,211 +364,128 @@ wb_test  <- testing(wb_split)
 wb_folds <- vfold_cv(wb_train, v = 10)
 ```
 
+```{r tidy_wfl}
 
-```{r recipe}
+# Creating a tidymodels workflow object for my simple linear regression model; 
+# training on test data
 
-# Building a recipe for data processing
-
-sat_rec <- recipe(
+simple_sat_wfl <- workflow() %>%
+  add_model(linear_reg() %>% 
+              set_engine("lm") %>% 
+              set_mode("regression")) %>% 
   
-   # Telling the recipe() what my model is going to be (using a formula here)
-   # and what my training data is.
+  # The formula in my recipe indicates that I want to regress job satisfaction
+  # on the top twelve most important predictors (as determined by LASSO analysis)
   
-  job_satisfaction ~ .,
-  data = wb_train) %>%
+  add_recipe(recipe(job_satisfaction ~ meaningful_work +
+                      recognition + fair_pay + team + 
+                      job_insecurity + helpful_management + 
+                      work_autonomy + respect + helpful_supervisor + 
+                      energizing_culture + stressful + workplace_design, 
+                    data = wb_train))
 
-  #  Removing any numeric variables that have zero variance
-  
-  step_zv(all_numeric(), -all_outcomes()) %>%
-  
-  # Normalizing (centering and scaling) the numeric variables. This is important
-  # for lasso regularization.
-  
-  step_normalize(all_numeric(), -all_outcomes())
-
-# Creating a recipe whose step objects have been updated with the required
-# pre-processing parameters
-
-sat_prep <- sat_rec %>%
-  prep()
-
-# Specifying and then fitting my model
-
-# Here I set up one model specification for lasso regression; I picked a value
-# for penalty (sort of randomly) and I set mixture = 1 for lasso.
-
-lasso_spec <- linear_reg(penalty = 0.1, mixture = 1) %>%
-  set_engine("glmnet")
-
-# Adding a recipe to my workflow
-
-wf <- workflow() %>%
-  add_recipe(sat_rec)
-
-# Adding model to workflow and fitting workflow with training data
-
-lasso_fit <- wf %>%
-  add_model(lasso_spec) %>%
-  fit(data = wb_train)
-
-# Pulling the fit object so that I can tidy() it
-
-lasso_fit %>%
-  pull_workflow_fit() %>%
-  tidy()
 ```
 
 
-```{r tuning}
- 
-doParallel::registerDoParallel()
+```{r tidy_validation}
 
-#  Determining right regularization parameter "penalty" by using resampling and
-#  tuning the model.
+# Checking how well approach works under cross-validation
 
-set.seed(10)
-
-# Building a set of bootstraps resamples
-
-wb_boot <- bootstraps(wb_train)
-
-# Setting penalty = tune() instead of to a single value.
-
-tune_spec <- linear_reg(penalty = tune(), mixture = 1) %>%
-  set_engine("glmnet")
-
-# Using penalty() function to set up an appropriate grid for this kind of
-# regularization model.
-
-lambda_grid <- grid_regular(penalty(), levels = 50)
-
-# Tuning grid using workflow object
-lasso_grid <- tune_grid(
-  wf %>% add_model(tune_spec),
-  resamples = wb_boot,
-  grid = lambda_grid)
-```
-
-```{r metrics}
-
-# Collecting results after tuning grid and visualizing performance with the
-# regularization parameter.
-
-lasso_grid %>%
-  collect_metrics() %>%
-  ggplot(aes(penalty, mean, color = .metric)) +
-  geom_errorbar(aes(ymin = mean - std_err,
-                    ymax = mean + std_err),
-                alpha = 0.5) +
-  geom_line(size = 1.5) +
-  facet_wrap(~.metric, scales = "free", nrow = 2) +
-  scale_x_log10() +
-  theme(legend.position = "none")
-```
-
-```{r final_reg_parameter}
-
-# Choosing final regularization parameter based on lowest RMSE
-
-lowest_rmse <- lasso_grid %>%
-  select_best("rmse")
-
-final_lasso <- finalize_workflow(
-  wf %>% add_model(tune_spec),
-  lowest_rmse)
-```
-
-```{r final_wfl}
-
-# Plotting importance of each variable based on fitting model to training data
-
-final_lasso %>%
-  fit(wb_train) %>%
-  pull_workflow_fit() %>%
-  vi(lambda = lowest_rmse$penalty) %>%
-  mutate(Importance = abs(Importance),
-         Variable = fct_reorder(Variable, Importance)) %>%
-  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0.01)) +
-  labs(y = NULL) +
-  theme_linedraw()
-
-```
-
-```{r last_fit}
-
-# Finally, I am returning to my testing data
-
-# The tune package has a function last_fit(); now that I have tuned and
-# finalized my workflow/model, I want to fit it one last time on my training
-# data and evaluate it on my testing data. I only have to pass this function my
-# finalized model/workflow and my split data.
-
-last_fit(final_lasso, wb_split) %>%
+simple_sat_wfl %>% 
+  fit_resamples(resamples = wb_folds) %>% 
   collect_metrics()
 
 ```
-```{r final_model}
 
-# Final model fit to entire data set
+```{r tidy_test}
+
+# Checking performance on test data
+
+simple_sat_wfl %>% 
+  fit(data = wb_train) %>% 
+  predict(new_data = wb_test) %>% 
+  bind_cols(wb_test %>% select(job_satisfaction)) %>% 
+  metrics(truth = job_satisfaction, estimate = .pred)
+
+```
 
 
-sat_fit <- final_lasso %>%
-  fit(wb_wellness)
+```{r simple_satisfaction_cross_validation}
 
-sat_fit %>%
+simple_sat_wfl %>% 
+  fit_resamples(resamples = wb_folds) %>% 
+  collect_metrics()
+
+```
+
+``` {r simple_satisfaction_test_predict}
+
+simple_sat_wfl %>% 
+  fit(data = wb_train) %>% 
+  predict(new_data = wb_test) %>% 
+  bind_cols(wb_test %>% select(job_satisfaction)) %>% 
+  metrics(truth = job_satisfaction, estimate = .pred)
+
+```
+
+``` {r final_simple_model}
+
+simple_sat_model <- lm(formula = job_satisfaction ~ meaningful_work +
+                      recognition + fair_pay + team + 
+                      job_insecurity + helpful_management + 
+                      work_autonomy + respect + helpful_supervisor + 
+                      energizing_culture + stressful + workplace_design,
+                      data = wb_wellness) 
+
+simple_sat_model %>%
   tidy()
-```
-
-```{r save_model}
-
-# Saving model as a .rds file
-
-write_rds(sat_fit, "sat_fit.rds")
 
 ```
 
 
-```{r importance_scores}
+``` {r predict}
 
-# Saving variable importance scores tibble
+# Testing predict() with simple_sat_model and a tibble with average values for
+# all predictors
 
-sat_vi <- sat_fit %>%
-  pull_workflow_fit() %>%
-  vi(lambda = lowest_rmse$penalty) 
 
-write_rds(sat_vi, "sat_vi.rds")
+prediction_simple_sat <- predict(simple_sat_model, 
+                                 tibble(
+                                   meaningful_work =
+                                     mean(wb_wellness$meaningful_work), 
+                                   recognition = 
+                                     mean(wb_wellness$recognition),
+                                   fair_pay = 
+                                     mean(wb_wellness$fair_pay),
+                                   team = 
+                                     mean(wb_wellness$team),
+                                  job_insecurity = 
+                                     mean(wb_wellness$job_insecurity),
+                                   helpful_management = 
+                                     mean(wb_wellness$helpful_management),
+                                   work_autonomy = 
+                                     mean(wb_wellness$work_autonomy),
+                                   respect = 
+                                     mean(wb_wellness$respect),
+                                   helpful_supervisor = 
+                                     mean(wb_wellness$helpful_supervisor),
+                                   energizing_culture = 
+                                     mean(wb_wellness$energizing_culture),
+                                   stressful = 
+                                     mean(wb_wellness$stressful),
+                                   workplace_design = 
+                                     mean(wb_wellness$workplace_design)),
+                                          interval = "confidence")
+                          
 ```
 
 
 
-```{r final_plot}
+```{r save_rds}
 
-# Plotting importance of each variable based on fitting model to entire dataset
-
-sat_fit %>%
-  pull_workflow_fit() %>%
-  vi(lambda = lowest_rmse$penalty) %>%
-  mutate(Importance = abs(Importance),
-         Variable = fct_reorder(Variable, Importance)) %>%
-  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0.01)) +
-  labs(y = NULL,
-       title = "Variable Importance Scores", 
-       subtitle = "Sense of meaning in work and feeling recognized are the most\nimportant predictors of overall job satisfaction")+
-  theme_light()
-
-# The most important predictors of WBG employees' overall job satisfaction are
-# meaningful_work, recognition, fair_pay, team, job_insecurity,
-# helpful_management, and work_autonomy.
-```
-
-# Code
-
-```{r print-code, ref.label=knitr::all_labels(), echo = TRUE, eval=FALSE} 
-
-# This command will print out my code.
+write_rds(simple_sat_model,"simple_satisfaction_model.rds")
 
 ```
+
+
+
