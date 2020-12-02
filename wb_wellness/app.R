@@ -108,22 +108,52 @@ ui <- navbarPage(
     
     tabPanel(
       "Model",
-      h2("Model"),
-      p(
-        "Introduction... variables measure extent to which an employee agreed 
-        with a given statement. Higher scores represent stronger agreement; 
-        lower scores represent stronger disagreement. Statements attached to 
-        each variable can be found below the plot. The plot..."
-      ),
-      p("more explanation"
+      h1("Modeling WBG Employee Job Satisfaction"),
+      h2("Determining Variable Importance through LASSO Regression"),
+      p("The primary modeling goal of this project was to determine which 
+      variables related to work and the workplace environment are most 
+      predictive of World Bank Group employees' overall reported job 
+      satisfaction. In order to determine which variables were most important 
+      for predicting job satisfaction, I performed LASSO (Least Absolute 
+      Shrinkage and Selection Operator) regression analysis. LASSO is a 
+      variation of linear regression which is useful when one is handling
+      data with a large number of predictor variables. This method can reduce
+      the problem of overfitting by applying a penalty parameter and 
+      reducing the variable coefficients which are responsible for
+      large variance. I optimized this model by determining the optimal 
+      penalty/regularization parameter and selecting the model 
+      with the lowest Root Mean Square Error."
         ),
-  
+      p("Each variables measures the extent to which an employee agrees 
+        with a given statement. Higher scores represent stronger agreement; 
+        lower scores represent stronger disagreement. The statements associated 
+        with each variable can be found at the bottom of this page."
+        ),
+      
         plotOutput("importance_plot"),
       
       h2("Model Interpretation"),
       p(
-        "Interpretation..."
+        "The Variable Importance Plot above visualizes the relative importance
+        of each variable in predicting WBG employees' overall reported job 
+        satisfaction (based on the results of the LASSO regression analysis).
+        As this plot shows, the most important predictor of WBG employees'
+        overall job satisfaction, by far, is whether or not they find their work 
+        meaningful. The second most important predictor of job satisfaction
+        is whether employees' feel recognized for their work. Some other top 
+        predictors of job satisfaction include (a) whether employees'
+        feel that their employers pay them fairly for their work,
+        (b) whether employees feel that they are part of a team at work,
+        and (c) whether employees worry about losing their job."
       ),
+      p("The plot indicates that certain variables are (perhaps surprisingly)
+        less important when it comes to predicting job satisfaction. 
+        For example, whether an employee feels that they work \"too many 
+        long hours or too much overtime\" does not appear to be an important 
+        predictor of overall job satisfaction. Nor does whether an employee 
+        feels that they have sufficient rest/break time at work seem to be an 
+        important predictor of job satisfaction."
+        ),
       
       h2("Variable Codes"),
       
