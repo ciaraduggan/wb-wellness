@@ -140,8 +140,8 @@ ui <- navbarPage(
         As this plot shows, the most important predictor of WBG employees'
         overall job satisfaction, by far, is whether or not they find their work 
         meaningful. The second most important predictor of job satisfaction
-        is whether employees' feel recognized for their work. Some other top 
-        predictors of job satisfaction include (a) whether employees'
+        is whether employees feel recognized for their work. Some other top 
+        predictors of job satisfaction include (a) whether employees
         feel that their employers pay them fairly for their work,
         (b) whether employees feel that they are part of a team at work,
         and (c) whether employees worry about losing their job."
