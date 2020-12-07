@@ -410,25 +410,25 @@ simple_sat_wfl %>%
 ```
 
 
-```{r simple_satisfaction_cross_validation}
-
-simple_sat_wfl %>% 
-  fit_resamples(resamples = wb_folds) %>% 
-  collect_metrics()
-
-```
-
 ``` {r simple_satisfaction_test_predict}
+
+# Predicting onto my test data using the model I fitted to my training data
 
 simple_sat_wfl %>% 
   fit(data = wb_train) %>% 
   predict(new_data = wb_test) %>% 
   bind_cols(wb_test %>% select(job_satisfaction)) %>% 
+  
+  # Collecting metrics (RMSE)
+  
   metrics(truth = job_satisfaction, estimate = .pred)
 
 ```
 
 ``` {r final_simple_model}
+
+# Fitting final model to entire dataset
+
 
 simple_sat_model <- lm(formula = job_satisfaction ~ meaningful_work +
                       recognition + fair_pay + team + 
@@ -436,6 +436,8 @@ simple_sat_model <- lm(formula = job_satisfaction ~ meaningful_work +
                       work_autonomy + respect + helpful_supervisor + 
                       energizing_culture + stressful + workplace_design,
                       data = wb_wellness) 
+
+# Creating tibble in tidy format
 
 simple_sat_model %>%
   tidy()
@@ -483,9 +485,8 @@ prediction_simple_sat <- predict(simple_sat_model,
 
 ```{r save_rds}
 
+# Saving my model as an rds file
+
 write_rds(simple_sat_model,"simple_satisfaction_model.rds")
 
 ```
-
-
-

@@ -425,12 +425,11 @@ lasso_fit %>%
 
 
 ```{r tuning}
- 
-doParallel::registerDoParallel()
 
 #  Determining right regularization parameter "penalty" by using resampling and
 #  tuning the model.
-
+ 
+doParallel::registerDoParallel()
 set.seed(10)
 
 # Building a set of bootstraps resamples
@@ -478,9 +477,12 @@ lasso_grid %>%
 lowest_rmse <- lasso_grid %>%
   select_best("rmse")
 
-final_lasso <- finalize_workflow(
-  wf %>% add_model(tune_spec),
-  lowest_rmse)
+# Updating workflow with this value
+
+final_lasso <- finalize_workflow(wf %>% 
+                                   add_model(tune_spec),
+                                 lowest_rmse
+                                 )
 ```
 
 ```{r final_wfl}
@@ -488,9 +490,20 @@ final_lasso <- finalize_workflow(
 # Plotting importance of each variable based on fitting model to training data
 
 final_lasso %>%
+  
+  # Fitting model to training data
+  
   fit(wb_train) %>%
   pull_workflow_fit() %>%
+  
+  # Running vi() (variable importance) function on fitted model, setting lambda
+  # to the penalty in the model with the lowest RMSE
+  
   vi(lambda = lowest_rmse$penalty) %>%
+  
+  # Mutating Importance column to absolute values; mutating Variable column so
+  # that it is ordered by Importance
+  
   mutate(Importance = abs(Importance),
          Variable = fct_reorder(Variable, Importance)) %>%
   ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
@@ -518,7 +531,6 @@ last_fit(final_lasso, wb_split) %>%
 
 # Final model fit to entire data set
 
-
 sat_fit <- final_lasso %>%
   fit(wb_wellness)
 
@@ -537,7 +549,7 @@ write_rds(sat_fit, "sat_fit.rds")
 
 ```{r importance_scores}
 
-# Saving variable importance scores tibble
+# Saving variable importance scores tibble as a .rds file
 
 sat_vi <- sat_fit %>%
   pull_workflow_fit() %>%

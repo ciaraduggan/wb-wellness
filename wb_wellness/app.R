@@ -2,7 +2,7 @@
 # World Bank Group Employee Job Satisfaction Analysis Shiny App 
 # Author: Ciara Duggan
 
-# Load libraries
+# Loading libraries
 
 library(shiny)
 library(shinythemes)
@@ -19,7 +19,8 @@ satisfaction_vi <- readRDS("./sat_vi.rds")
 simple_satisfaction_model <- readRDS("./simple_satisfaction_model.rds")
 
 
-# Define UI
+# Defining UI
+
 ui <- navbarPage(
     theme = shinytheme("cosmo"),
     "World Bank Group Employee Job Satisfaction",
@@ -32,8 +33,16 @@ ui <- navbarPage(
     # Creating an "About" tab (for project background and personal info)
     
     tabPanel("About", 
-           
-             mainPanel(
+               h1("Predicting Job Satisfaction:", align = "center"),
+               h2("A Study of World Bank Group Employees", align = "center"),
+               br(),
+               
+               # Adding a workplace graphic (purely for aesthetics)
+               
+               imageOutput("workplace_image", width = "100%", height = "100%"),
+               
+               br(),
+
                 h3("Project Background and Motivations"),
                  p(
                 "This project investigates the relationship between the overall
@@ -79,7 +88,7 @@ ui <- navbarPage(
                 job satisfaction of WBG employees."
                   ),
                 
-                h3("Github Repo"),
+                h3("GitHub Repo"),
                 p(
                  "This project's GitHub repository lives",
                  a("here", href = "https://github.com/ciaraduggan/wb-wellness"),
@@ -96,7 +105,7 @@ ui <- navbarPage(
                   href = "mailto:ciaraduggan@college.harvard.edu"),
                   "."
                 )
-            )),
+            ),
     
     ############################
     
@@ -106,9 +115,14 @@ ui <- navbarPage(
     # Creating a "Model" tab (where I will present my models and discuss 
     # modeling choices).
     
-    tabPanel(
-      "Model",
-      h1("Modeling WBG Employee Job Satisfaction"),
+    tabPanel("Analysis",
+             h1("Modeling WBG Employee Job Satisfaction"),
+             
+      # Creating a tab where I will talk about my LASSO regression analysis and
+      # present the variable importance plot
+             
+      tabsetPanel(
+        tabPanel("Determining Variable Importance",
       h2("Determining Variable Importance through LASSO Regression"),
       p("The primary modeling goal of this project was to determine which 
       variables related to work and the workplace environment are most 
@@ -122,22 +136,32 @@ ui <- navbarPage(
       reducing the variable coefficients which are responsible for
       large variance. I optimized this model by determining the optimal 
       penalty/regularization parameter and selecting the model 
-      with the lowest Root Mean Square Error."
+      with the lowest Root Mean Square Error (RMSE)."
         ),
       p("Each variables measures the extent to which an employee agrees 
-        with a given statement. Higher scores represent stronger agreement; 
-        lower scores represent stronger disagreement. The statements associated 
+        with a given statement. Higher values represent stronger agreement; 
+        lower values represent stronger disagreement. The statements associated 
         with each variable can be found at the bottom of this page."
         ),
       
-        plotOutput("importance_plot"),
+      # Including VI plot
       
-      h2("Model Interpretation"),
-      p(
-        "The Variable Importance Plot above visualizes the relative importance
+      column(11,
+        plotOutput("importance_plot"),
+        br()
+        ),
+      
+      h2("Interpreting the Variable Importance Plot"),
+      p("The Variable Importance Plot above visualizes the relative importance
         of each variable in predicting WBG employees' overall reported job 
         satisfaction (based on the results of the LASSO regression analysis).
-        As this plot shows, the most important predictor of WBG employees'
+        The variable importance (VI) score is a measure of each variable's 
+        predictive power; it gives us a sense of the extent to which the model's
+        accuracy will decrease if the variable is removed. For the sake of 
+        predictive accuracy, therefore, it is most important to include the 
+        variables with the highest VI scores."
+      ),
+      p( "As this plot shows, the most important predictor of WBG employees'
         overall job satisfaction, by far, is whether or not they find their work 
         meaningful. The second most important predictor of job satisfaction
         is whether employees feel recognized for their work. Some other top 
@@ -155,141 +179,161 @@ ui <- navbarPage(
         important predictor of job satisfaction."
         ),
       
-      h2("Variable Codes"),
+      h2("Building a Simple Linear Regression Model"),
+      p("After determining which variables were most important for 
+      accurately predicting WBG employee job satisfaction, I built a 
+      simple linear regression model which can be used to predict the 
+      overall job satisfaction of WBG employees. This model regresses 
+      job satisfaction on the twelve most important predictors. Navigate 
+      to the Predictive Modeling Tool tab to see how this model can be used 
+      to predict job satisfaction."),
+      br(),
+      br()
+      ),
       
-      tags$ul(
-        
-        tags$li(
-          tags$b("meaningful_work:"), "\"I find my work meaningful.\""
-        ),
-        
-        tags$li(
-          tags$b("recognition:"), "\"I feel recognized for my work.\""
-        ),
-        
-        tags$li(
-          tags$b("fair_pay:"), "\"My employer pays me fairly for my work.\""
-        ),
-        
-        tags$li(
-          tags$b("team:"), "\"I feel part of a team at work.\""
-        ),
-        
-        tags$li(
-          tags$b("job_insecurity:"), "\"I worry about losing my job.\""
-        ),
-        
-        tags$li(
-          tags$b("helpful_management:"), "\"Management helps me deal with challenges at work.\""
-        ),
-        
-        tags$li(
-          tags$b("work_autonomy:"), "\"Staff feel respected at work.\""
-        ),
-        
-        tags$li(
-          tags$b("respect:"), "\"I have a lot of freedom to decide how to do my work.\""
-        ),
-        
-        tags$li(
-          tags$b("helpful_supervisor:"), "\"My supervisor is helpful.\""
-        ),
-        
-        tags$li(
-          tags$b("energizing_culture:"), "\"There is a vibrant atmosphere which is energizing.\""
-        ),
-        
-        tags$li(
-          tags$b("stressful:"), "\"My job is stressful.\""
-        ),
-        
-        tags$li(
-          tags$b("workplace_design:"), "\"The physical design of my workplace helps me to be productive (consider before COVID pandemic).\""
-        ),
-        
-        tags$li(
-          tags$b("workfriends:"), "\"Some of my coworkers are my personal friends.\""
-        ),
-        
-        tags$li(
-          tags$b("mental_exhaustion:"), "\"My job is mentally exhausting.\""
-        ),
-        
-        tags$li(
-          tags$b("clear_expectations:"), "\"I know what is expected of me.\""
-        ),
-        
-        tags$li(
-          tags$b("caring_supervisor:"), "\"My supervisor truly cares about me.\""
-        ),
-        
-        tags$li(
-          tags$b("community_culture:"), "\"People feel a sense of loyalty, commitment and community within my workplace.\""
-        ),
-        
-        tags$li(
-          tags$b("advancement_opportunities:"), "\"There are opportunities for advancement or a higher position.\""
-        ),
-        
-        tags$li(
-          tags$b("caring_management:"), "\"Management truly cares about the health and well-being of staff.\""
-        ),
-        
-        tags$li(
-          tags$b("poor_worklife_integration:"), "\"Demands of my job interfere with my home life.\""
-        ),
-        
-        tags$li(
-          tags$b("fair_treatment:"), "\"Staff feel they are treated fairly.\""
-        ),
-        
-        tags$li(
-          tags$b("too_much_work:"), "\"I have too much to do at work to do a good job.\""
-        ),
-        
-        tags$li(
-          tags$b("authentic_culture:"), "\"The culture is authentic and honest.\""
-        ),
-        
-        tags$li(
-          tags$b("trust_management:"), "\"Staff trust management.\""
-        ),
-        
-        
-        tags$li(
-          tags$b("predictable_schedule:"), "\"My schedule is predictable.\""
-        ),
-        
-        tags$li(
-          tags$b("flexible_schedule:"), "\"I can decide when to do my work (My schedule is flexible on a daily basis and I set my own schedule).\""
-        ),
-        
-        tags$li(
-          tags$b("long_hours:"), "\"I work too many long hours or too much overtime.\""
-        ),
-        
-        tags$li(
-          tags$b("reliable_coworkers:"), "\"I can rely on my coworkers for help.\""
-        ),
-        
-        tags$li(
-          tags$b("employee_input:"), "\"I have a lot to say about what happens in the workplace.\""
-        ),
-        
-        tags$li(
-          tags$b("physical_exhaustion:"), "\"My job is physically exhausting.\""
-        ),
-        
-        tags$li(
-          tags$b("fair_supervisor:"), "\"My supervisor treats me fairly.\""
-        ),
-        
-        tags$li(
-          tags$b("schedule_overflows:"), "\"My work schedule overflows into my home/family/leisure time to accommodate international time-zones.\""
-        ),
-        
-        tags$li(
-          tags$b("rest_time:"), "\"I have sufficient rest/break time in my job.\""
+      # Creating a tab which includes a list of variables and the survey
+      # questions they correspond with.
+      
+      tabPanel("Variable Codes",
+               
+               h2("Variable Codes"),
+               
+               tags$ul(
+                 
+                 tags$li(
+                   tags$b("meaningful_work:"), "\"I find my work meaningful.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("recognition:"), "\"I feel recognized for my work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("fair_pay:"), "\"My employer pays me fairly for my work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("team:"), "\"I feel part of a team at work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("job_insecurity:"), "\"I worry about losing my job.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("helpful_management:"), "\"Management helps me deal with challenges at work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("work_autonomy:"), "\"Staff feel respected at work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("respect:"), "\"I have a lot of freedom to decide how to do my work.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("helpful_supervisor:"), "\"My supervisor is helpful.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("energizing_culture:"), "\"There is a vibrant atmosphere which is energizing.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("stressful:"), "\"My job is stressful.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("workplace_design:"), "\"The physical design of my workplace helps me to be productive (consider before COVID pandemic).\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("workfriends:"), "\"Some of my coworkers are my personal friends.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("mental_exhaustion:"), "\"My job is mentally exhausting.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("clear_expectations:"), "\"I know what is expected of me.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("caring_supervisor:"), "\"My supervisor truly cares about me.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("community_culture:"), "\"People feel a sense of loyalty, commitment and community within my workplace.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("advancement_opportunities:"), "\"There are opportunities for advancement or a higher position.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("caring_management:"), "\"Management truly cares about the health and well-being of staff.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("poor_worklife_integration:"), "\"Demands of my job interfere with my home life.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("fair_treatment:"), "\"Staff feel they are treated fairly.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("too_much_work:"), "\"I have too much to do at work to do a good job.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("authentic_culture:"), "\"The culture is authentic and honest.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("trust_management:"), "\"Staff trust management.\""
+                 ),
+                 
+                 
+                 tags$li(
+                   tags$b("predictable_schedule:"), "\"My schedule is predictable.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("flexible_schedule:"), "\"I can decide when to do my work (My schedule is flexible on a daily basis and I set my own schedule).\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("long_hours:"), "\"I work too many long hours or too much overtime.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("reliable_coworkers:"), "\"I can rely on my coworkers for help.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("employee_input:"), "\"I have a lot to say about what happens in the workplace.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("physical_exhaustion:"), "\"My job is physically exhausting.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("fair_supervisor:"), "\"My supervisor treats me fairly.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("schedule_overflows:"), "\"My work schedule overflows into my home/family/leisure time to accommodate international time-zones.\""
+                 ),
+                 
+                 tags$li(
+                   tags$b("rest_time:"), "\"I have sufficient rest/break time in my job.\""
+                 )
+               )
+      
         )
       )
     ),
@@ -297,17 +341,21 @@ ui <- navbarPage(
     ############################
     
     
-    ############## FOURTH PAGE ##############
+    ############## THIRD PAGE ##############
 
+    # This page includes a predictive modeling tool which will allow the user to
+    # select input values (1-4 scale) for each of the twelve variable in my
+    # linear model. The visualization on the right will show how predicted
+    # overall job satisfaction changes depending on the user's inputs.
+    
       tabPanel("Predictive Modeling Tool",
              fluidPage(
                        titlePanel("Predictive Modeling Tool"),
-                       
+
                        h3("Predict an employee's overall job satisfaction 
                                  by completing the fields below."),
                        
-                       p("LASSO 
-                                 regression analysis indicated that the 
+                       p("LASSO regression analysis indicated that the 
                                  variables below are the twelve workplace 
                                  environment factors which are most predictive 
                                  of overall job satisfaction (based on the data 
@@ -315,14 +363,31 @@ ui <- navbarPage(
                                  This predictive tool uses a simple linear 
                                  regression model to predict a WBG employee's 
                                  overall job satisfaction based on the values 
-                                 the user provides. For more information on how 
+                                 the user provides. 
+                                 As you can see when you change the values of
+                                 each input, changing the value of certain 
+                                 inputs will result in a greater shift in 
+                                 predicted job satisfaction. For example, 
+                                 while increasing meaningful_work by 1 unit 
+                                 increase job satisfaction by about 0.91 points,
+                                 increasing job_insecurity by 1 unit will 
+                                 decrease satisfaction by about 0.17 points."
+                       ),
+                       p("For more information on how 
                                  this tool works, check out the source code
-                                 in this project's Github repo."
+                                 in this project's GitHub repo."
                        ),
                        
+                       # Including reactive visualization of predicted overall
+                       # job satisfaction
+                       
                        fluidRow(
-                         column(9, plotOutput("satisfaction_plot"))
+                         column(11, plotOutput("satisfaction_plot"))
                        ),
+                       
+                       # Creating numeric input options for each variable in the
+                       # model. The user will be able to select a value (1-4
+                       # scale) for each of these inputs.
                        
                        p("For the variables below, a score of 1 indicates that the employee \"Strongly Disagrees\" with the given statement,
                          a score of 2 indicates that they \"Disagree\",
@@ -343,7 +408,7 @@ ui <- navbarPage(
                                              label = "work_autonomy",
                                              value = 1,
                                              min = 1,
-                                             max = 4),
+                                             max = 4)
                          ),
                          
                          column(2, 
@@ -356,7 +421,7 @@ ui <- navbarPage(
                                              label = "respect",
                                              value = 1,
                                              min = 1,
-                                             max = 4),
+                                             max = 4)
                                 ),
                                 
                                 column(2, 
@@ -369,7 +434,7 @@ ui <- navbarPage(
                                                     label = "helpful_supervisor",
                                                     value = 1,
                                                     min = 1,
-                                                    max = 4),
+                                                    max = 4)
                                 ),
                          
                          column(2, 
@@ -382,7 +447,7 @@ ui <- navbarPage(
                                              label = "energizing_culture",
                                              value = 1,
                                              min = 1,
-                                             max = 4),
+                                             max = 4)
                          ),
                         
                          column(2, 
@@ -395,7 +460,7 @@ ui <- navbarPage(
                                              label = "stressful",
                                              value = 1,
                                              min = 1,
-                                             max = 4),
+                                             max = 4)
                          ),
 
                                 column(2, 
@@ -474,27 +539,85 @@ ui <- navbarPage(
 
  ##############################
 
-# Define server logic 
+# Defining server logic 
+
+ ##############################
 
 server <- function(input, output) {
   
+  
+  # Assigning the workplace image (saved as a .jpg file to the "workplace_image"
+  # output)
+  
+  output$workplace_image <- renderImage({
+    
+    # Source: https://studyonline.rmit.edu.au/blog/positive-workplace-culture
+    
+    list(src = './workplace.jpg',
+         height = 300,
+         width = 600,
+         style = "display: block; margin-left: auto; margin-right: auto;")
+    },
+    deleteFile = FALSE
+  )
+  
+  # Rendering the variable importance plot
+  
   output$importance_plot <- renderPlot({
     
+    # The satisfaction_vi dataset contains the results of running the vi()
+    # function on the fitted LASSO model, setting lambda so that it is equal to
+    # the penalty in the model with the lowest RMSE
+
     satisfaction_vi %>%
+      
+      # Mutating the Importance column so that it contains absolute values;
+      # mutating the Variable column so that it is ordered by Importance
+      # (descending order)
+      
       mutate(Importance = abs(Importance),
-             Variable = fct_reorder(Variable, Importance)) %>%
+             Variable = fct_reorder(Variable, Importance, .desc = TRUE)) %>%
+      
+      # Generating a ggplot() with a geom_col() layer; mapping Importance to x,
+      # Variable to y, and Sign to fill
+      
       ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
       geom_col() +
+      
+      # Improving aesthetics by expanding x access
+      
       scale_x_continuous(expand = c(0, 0.01)) +
+      
+      # Adding appropriate labels and removing y-axis label
+      
       labs(y = NULL,
            title = "Variable Importance Scores", 
            subtitle = "Sense of meaning in work and feeling recognized are the most important predictors of overall job satisfaction") +
-      theme_light()
+      
+      # Setting a new theme
+      
+      theme_light() +
+      
+      # Flipping the x and y axes
+      
+      coord_flip() +
+      
+      # Setting the angle and position of the x axis labels so that they are
+      # visible
+      
+      theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
   })
   
-    
+    # Creating predictor_sat, which will be used to
+    # generate a prediction based on user inputs
     
     predictor_sat <- reactive({
+      
+      # predictor_sat is the result of running the predict() function on a
+      # tibble containing the values for each variable that the user set in the
+      # UI. The predict() function is run using the simple_satisfaction_model (a
+      # linear model which regresses job satisfaction on top twelve most
+      # important predictors)
  
       predict(simple_satisfaction_model, 
               tibble(
@@ -526,22 +649,42 @@ server <- function(input, output) {
         
     })
     
+    # Generating the predicted job satisfaction plot
+    
     output$satisfaction_plot <- renderPlot({
+      
+      # Assigning the results of predictor_sat() to an object called prediction
+      
         prediction <- predictor_sat()
+ 
+        # Generating the job satisfaction prediction plot
         
         ggplot() +
+          
+          # Plotting a rectangular geom which represents the confidence interval
+          
             geom_rect(aes(xmin = prediction[2],
                           xmax = prediction[3], 
                           ymin = 0, 
                           ymax = 0.5, fill = "blue"),
                       fill = "#8cc8db", alpha = 0.5) +
+          
+          # Plotting a line segment at the predicted job satisfaction value
+          
             geom_segment(aes(x = prediction[1], y = 0, xend = prediction[1], yend = 0.5), 
                          color = "#8cc8db", size = 1) +
+          
+          # Creating an underlying rectangle that is 10 units long, representing
+          # the job satisfaction scale
+          
             geom_rect(aes(xmin = 1,
                           xmax = 10,
                           ymin = 0,
                           ymax = 0.5),
                       fill = "grey", alpha = 0.2) +
+          
+          # Plotting and labeling line segments at each value on the scale
+          
             geom_segment(aes(x = 1,
                              y = 0.5,
                              xend = 1,
@@ -622,16 +765,24 @@ server <- function(input, output) {
           annotate("text", x = 10, y = -0.25,
                    label = "10",
                    size = 5) +
+          
+          # Labeling the predicted value for job satisfaction
+          
           annotate("text", x = prediction[1], y = 0.6,
-                     label = "Employee's estimated job satisfaction level", 
+                     label = paste("Employee's estimated job satisfaction level: ", 
+                                   round(prediction[1], digits = 2), 
+                                   sep = ""),
                      color = "#37758a",
-                     size = 5) +
+                     size = 6) +
+          
+          # Setting x and y axis limits and a new theme
+          
             ylim(-0.48, 0.65) +
             xlim(0, 10) +
             theme_void()
     })
 }
 
-# Run the application 
+# Running the application 
 
 shinyApp(ui = ui, server = server)
