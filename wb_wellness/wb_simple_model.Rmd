@@ -445,14 +445,11 @@ simple_sat_model %>%
 ```
 
 
-``` {r predict}
+``` {r predict_sat_test}
 
-# Testing predict() with simple_sat_model and a tibble with average values for
-# all predictors
+# Creating a tibble with the mean value for each predictor
 
-
-prediction_simple_sat <- predict(simple_sat_model, 
-                                 tibble(
+        predictor_means <- tibble(
                                    meaningful_work =
                                      mean(wb_wellness$meaningful_work), 
                                    recognition = 
@@ -476,7 +473,51 @@ prediction_simple_sat <- predict(simple_sat_model,
                                    stressful = 
                                      mean(wb_wellness$stressful),
                                    workplace_design = 
-                                     mean(wb_wellness$workplace_design)),
+                                     mean(wb_wellness$workplace_design)
+                                  )
+
+# Creating a tibble with the median value for each predictor
+
+  predictor_medians <- tibble(
+                                   meaningful_work =
+                                     median(wb_wellness$meaningful_work), 
+                                   recognition = 
+                                     median(wb_wellness$recognition),
+                                   fair_pay = 
+                                     median(wb_wellness$fair_pay),
+                                   team = 
+                                     median(wb_wellness$team),
+                                  job_insecurity = 
+                                     median(wb_wellness$job_insecurity),
+                                   helpful_management = 
+                                     median(wb_wellness$helpful_management),
+                                   work_autonomy = 
+                                     median(wb_wellness$work_autonomy),
+                                   respect = 
+                                     median(wb_wellness$respect),
+                                   helpful_supervisor = 
+                                     median(wb_wellness$helpful_supervisor),
+                                   energizing_culture = 
+                                     median(wb_wellness$energizing_culture),
+                                   stressful = 
+                                     median(wb_wellness$stressful),
+                                   workplace_design = 
+                                     median(wb_wellness$workplace_design)
+                                  )
+
+
+# Testing predict() with simple_sat_model and a tibble with average values for
+# all predictors
+
+prediction_simple_sat <- predict(simple_sat_model, 
+                                 predictor_means,
+                                          interval = "confidence")\
+
+# Testing predict() with simple_sat_model and a tibble with median values for
+# all predictors
+
+prediction_simple_sat <- predict(simple_sat_model, 
+                                 predictor_medians,
                                           interval = "confidence")
                           
 ```

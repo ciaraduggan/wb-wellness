@@ -134,9 +134,10 @@ ui <- navbarPage(
       data with a large number of predictor variables. This method can reduce
       the problem of overfitting by applying a penalty parameter and 
       reducing the variable coefficients which are responsible for
-      large variance. I optimized this model by determining the optimal 
-      penalty/regularization parameter and selecting the model 
-      with the lowest Root Mean Square Error (RMSE)."
+      large variance. I tuned the model by testing a range of 
+      regularization/penalty parameters and selecting the one which generated 
+      the lowest Root Mean Square Error (RMSE). By selecting this optimal 
+      penalty parameter, I maximized the predictive accuracy of my model."
         ),
       p("Each variables measures the extent to which an employee agrees 
         with a given statement. Higher values represent stronger agreement; 
@@ -394,19 +395,20 @@ ui <- navbarPage(
                          a score of 3 indicates that they \"Agree\", and
                          a score of 4 indicates that they \"Strongly Agree\".
                          The statements which correspond with each variable 
-                         are shown below."
+                         are shown below. Currently, the value for each 
+                         predictor is set at the sample median."
                          ),
                        
                        fluidRow(
                          column(2, 
                                 numericInput("meaningful_work",
                                              label = "meaningful_work",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4),
                                 numericInput("work_autonomy",
                                              label = "work_autonomy",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4)
                          ),
@@ -414,12 +416,12 @@ ui <- navbarPage(
                          column(2, 
                                 numericInput("recognition",
                                              label = "recognition",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4),
                                 numericInput("respect",
                                              label = "respect",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4)
                                 ),
@@ -427,12 +429,12 @@ ui <- navbarPage(
                                 column(2, 
                                        numericInput("fair_pay",
                                                     label = "fair_pay",
-                                                    value = 1,
+                                                    value = 3,
                                                     min = 1,
                                                     max = 4),
                                        numericInput("helpful_supervisor",
                                                     label = "helpful_supervisor",
-                                                    value = 1,
+                                                    value = 3,
                                                     min = 1,
                                                     max = 4)
                                 ),
@@ -440,12 +442,12 @@ ui <- navbarPage(
                          column(2, 
                                 numericInput("team",
                                              label = "team",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4),
                                 numericInput("energizing_culture",
                                              label = "energizing_culture",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4)
                          ),
@@ -453,12 +455,12 @@ ui <- navbarPage(
                          column(2, 
                                 numericInput("job_insecurity",
                                              label = "job_insecurity",
-                                             value = 1,
+                                             value = 2,
                                              min = 1,
                                              max = 4),
                                 numericInput("stressful",
                                              label = "stressful",
-                                             value = 1,
+                                             value = 3,
                                              min = 1,
                                              max = 4)
                          ),
@@ -466,12 +468,12 @@ ui <- navbarPage(
                                 column(2, 
                                        numericInput("helpful_management",
                                                     label = "helpful_management",
-                                                    value = 1,
+                                                    value = 3,
                                                     min = 1,
                                                     max = 4),
                                        numericInput("workplace_design",
                                                     label = "workplace_design",
-                                                    value = 1,
+                                                    value = 3,
                                                     min = 1,
                                                     max = 4)
                                 )
